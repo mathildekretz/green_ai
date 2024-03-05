@@ -26,7 +26,7 @@ float*** allocate_3D_array(size_t size)
 int main()
 {
 	int i, j, k, dx, dy, dz;
-	int v_size = 1024, rad = 3;
+	int v_size = 128, rad = 50;
 	float ***A, ***B;
 	double acc;
 
@@ -39,6 +39,15 @@ int main()
 				A[i][j][k] = i+j+k;
 
 	// Write the function filling B here
+	for(i = rad; i < v_size-rad; i++)
+		for(j = rad; j < v_size-rad; j++)
+			for(k = rad; k < v_size-rad; k++)
+				//{acc = 0.0f;
+				for(dx = -rad; dx < rad+1; dx++)
+					for(dy = -rad; dy < rad+1; dy++)
+						for(dz = -rad; dz < rad+1; dz++)
+							//acc += A[i+dx][j+dy][k+dz];
+							B[i][j][k] += A[i+dx][j+dy][k+dz];
 	
 	printf("%f\n", B[v_size/2][v_size/2][v_size/2]);
 
