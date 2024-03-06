@@ -15,3 +15,5 @@ plt.legend()
 plt.savefig('q10.png')
 plt.clf()
 
+#scaling curve q12
+matsize_list = [256, 512, ]
