@@ -17,9 +17,9 @@ plt.clf()
 
 #scaling curve q12
 matsize_list = [256, 512, 768, 1024, 1408, 1664, 2048]
-matsize_times_o3 = [5.7e-3, 3.3e-2, 0.10, 0.23, 0.58, 0.97, 1.87]
-matsize_times_o2 = [5.7e-3, 4.2e-2, 0.13, 0.27, 0.64, 1.01, 2.0]
-plt.plot(matsize_list, matsize_times_o2, label=r"compile with C and -O2", color='orangered')
+matsize_times_o3 = [3.8e-3, 3.3e-2, 0.11, 0.24, 0.58, 0.96, 1.0]
+matsize_times = [4.0e-2, 0.30, 0.78, 1.18, 4.66, 7.68, 14.27]
+plt.plot(matsize_list, matsize_times, label=r"compile with C", color='orangered')
 plt.plot(matsize_list, matsize_times_o3, label=r"compile with C and -O3", color='deeppink')
 plt.xlabel(r"marix size")
 plt.ylabel('time [s]')
@@ -27,3 +27,5 @@ plt.title('Scaling curves for vectorized matmult in C')
 plt.legend()
 plt.savefig('q12.png')
 plt.clf()
+
+#scaling curves 

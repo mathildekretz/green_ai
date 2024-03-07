@@ -84,42 +84,40 @@ typedef float vec __attribute__ (( vector_size(32) ));
 
 void matmul_v4(const float *A, const float *B, float *C, int M, int N, int K)
 {
-	if(K % 8 != 0)
+	int i,j,k;
+	// Rounded number of 8-element vec in a K
+	if(k % 8 != 0)
 	{
 		printf("Error, mismatch between matrix size and kernel size");
 		exit(EXIT_FAILURE);
 	}
-	int i, j, k;
-	//How to declare a vector dynamically, composed of X 32 bit elements ?
-	//vec *a = (vec*) aligned_alloc(32,X*32);  
 	
-	//How to access a vector sub element ?
-	// a[i/8][i%8] = A[i];
+	int n_K = K/8;
 	
-	//How to allocated and initialize a vector to a constant value
-	//vec acc = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
+	vec acc;
+	vec *a = (vec*) aligned_alloc(32,M*n_K*32);
+	vec *b = (vec*) aligned_alloc(32,N*n_K*32);
 	
-	//1° Create the vectorized versions of A and B
-    vec *at = (vec*) aligned_alloc(32, 32*K/8*M);
-    vec *b = (vec*) aligned_alloc(32, 32*K/8*N);
+	for(j = 0; j < M; j++)	
+		for(i = 0; i < K; i++)
+			a[j*n_K + i/8][i%8] = A[i*M+j];
 	
-	//2° Fill the vectorized versions
-
-    for (i=0; i<M; i++)
-        for (j=0; j<K; j++)
-            at[(j+i*K)/8][(j+i*K)%8] = A[i+j*M];
-    for (j=0; j<K*N; j++)
-        b[j/8][j%8] = B[j];
+	for(j = 0; j < N; j++)	
+		for(i = 0; i < K; i++)
+			b[j*n_K + i/8][i%8] = B[j*K+i];
 	
-	//3° Do the i,j,k loops with the vectorized accumulate loop over k    
-    for (i=0; i<M; i++)
-        for (j=0; j<N; j++) {
-            vec acc = {0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f};
-            for (k=0; k<K/8; k++) 
-                acc += at[k+i*K/8]*b[k+j*K/8];
-            for (k=0; k<8; k++)
-                C[i+j*M] += acc[k];
-        }
+	#pragma omp parallel for schedule(dynamic, 1) private(j,k,acc)
+	for(i = 0; i < N; i++)	
+		for(j = 0; j < M; j++)
+		{
+			for(k = 0; k < 8; k++)
+				acc[k] = 0.0;
+			for(k = 0; k < n_K; k++)
+				acc += a[j*n_K+k] * b[i*n_K+k];
+			
+			for(k = 0; k < 8; k++)
+				C[i*M+j] += acc[k];
+		}
 }
 
 
@@ -139,8 +137,25 @@ void kernel(const float *_a, const float *_b, float *_c,
 	vec t[ker_h/8][ker_w] = {};
 
 	//1° Loop over k that do the vectorized accumulate inside the kernel region using an implicit fma instruction
+    for (k = k_start; k<k_stop; k++){
+        for (b_n = 0; b_n< ker_w; b_n++){
+            val = _b[(j+b_n)*K+k];
+            vec beta = {val, val, val, val, val, val, val, val};
+
+            for(b_m = 0; b_m<ker_h/8; b_m++) {
+                vec alpha;
+                for (l=0; l<8; l++)
+                    alpha[l] = _a[i+k*M+b_m*8+l];
+                t[b_m][b_n] += alpha * beta;
+            }
+        }
+    }
 
 	//2° accumulate the result in the corresponding region of C
+    for(b_n = 0; b_n < ker_w; b_n++)
+		for(b_m = 0; b_m < ker_h/8; b_m++)
+			for(l = 0; l < 8; l++)
+				_c[i+(j+b_n)*M+b_m*8+l] += t[b_m][b_n][l];
 }
 
 
@@ -155,7 +170,9 @@ void matmul_v5(const float *A, const float *B, float *C, int M, int N, int K)
 	}
 
 	//Simple loop over M and N kernel regions that call the kernel
-
+    for(j = 0; j < N; j += ker_w)
+		for(i = 0; i < M; i += ker_h)
+			kernel(A, B, C, M, N, K, i, j, 0, K);
 }
 
 
@@ -187,7 +204,7 @@ int main()
 	size_t i;
 	int scale = 10;
     int value = 2048;
-	size_t M = value, N = value, K = value;
+	size_t M = 48*scale, N = 48*scale, K = 48*scale;
 	float *A, *B, *C, *C_bis;
 
 	float alpha = 1.0f, beta = 0.0f;
@@ -214,7 +231,7 @@ int main()
 
 	init_timing(&timer);
 
-	matmul_v4(A,B,C_bis,M,N,K);
+	matmul_v5(A,B,C_bis,M,N,K);
 	
 	printf("Custom sgemm: %f - Elapsed time: %f s\n", C_bis[M*N/2], elapsed_time(timer));
 	
