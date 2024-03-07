@@ -33,14 +33,15 @@ radius_5 = np.array([1.20, 1.20, 1.36])
 radius_1 = np.array([1.20, 1.28, 1.2])"""
 
 #scaling curve q.13
-vsize_list = [256, 128, 64, 32, 16, 8, 512]
-vsize_times_c = [6.64, 0.93, 0.3, 0.20, 0.23, 0.25, 74.7]
-radius_list = [3, 5, 10, 20, 40, 60, 50]
-radius_times_c = [0.93, 3.18, 16.09, 60.6, 84, 1.34, 28.68]
-vsize_times_python = [32.58, 8.77, 3.45, 3.0, 3.29, 3.42, 386]
-radius_times_python = [8.77, 21.12, 149]
-plt.scatter(vsize_list, vsize_times_c, marker='+', label=r"compile with C and -O3, $radius=3$", color='yellowgreen')
-plt.scatter(vsize_list, vsize_times_python, marker='+', label=r"vectorial radius compiled with Numba, $radius=3$", color='cornflowerblue')
+vsize_list = [8, 16, 32, 64, 128, 256, 496, 512, 556]
+vsize_times_c = [0.25, 0.23, 0.20, 0.3, 0.93, 6.64, 42.77, 54.0, 58.91]
+vsize_times_python = [3.42, 3.29, 3.0, 3.45, 8.77, 32.58, 296.2, 302.7, 369]
+
+radius_list = [3, 5, 10, 20, 30, 40, 50, 60]
+radius_times_c = [0.93, 3.18, 16.09, 60.6, 76, 84, 28.68, 1.34]
+radius_times_python = [8.77, 21.12, 67.5, 262.7, 366.6, 228.5, 99.9, 9.35]
+plt.plot(vsize_list, vsize_times_c, label=r"compile with C and -O3, $radius=3$", color='yellowgreen')
+plt.plot(vsize_list, vsize_times_python, label=r"vectorial radius compiled with Numba, $radius=3$", color='cornflowerblue')
 plt.xlabel(r"$v_{size}$")
 plt.ylabel('time [s]')
 plt.title('Comparison of scaling curves between C and Python')
@@ -48,8 +49,8 @@ plt.legend()
 plt.savefig('q13_vsize.png')
 plt.clf()
 
-plt.scatter(radius_list, radius_times_c, marker='+', label=r"compile with C and -O3, $v_{size}=128$", color='yellowgreen')
-plt.scatter(radius_list, radius_times_c, marker='+', label=r"vectorial radius compiled with Numba, $v_{size}=128$", color='cornflowerblue')
+plt.plot(radius_list, radius_times_c, label=r"compile with C and -O3, $v_{size}=128$", color='yellowgreen')
+plt.plot(radius_list, radius_times_python, label=r"vectorial radius compiled with Numba, $v_{size}=128$", color='cornflowerblue')
 plt.xlabel(r"$radius$")
 plt.ylabel('time [s]')
 plt.title('Comparison of scaling curves between C and Python')

@@ -26,7 +26,7 @@ float*** allocate_3D_array(size_t size)
 int main()
 {
 	int i, j, k, dx, dy, dz;
-	int v_size = 512, rad = 3;
+	int v_size = 556, rad = 3;
 	float ***A, ***B;
 	double acc;
 

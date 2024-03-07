@@ -33,7 +33,7 @@ def loop_vectorial_radius(v_size, rad, A, B):
 
 
 v_size = 128
-rad = 20
+rad = 60
 
 # Initialize A with values using broadcasting
 x, y, z = np.ogrid[:v_size, :v_size, :v_size]
